@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.Caching;
 
 namespace CachePOC
@@ -94,7 +93,7 @@ namespace CachePOC
             string key = this.GenerateKey(typeof(T), entityId);
             var obj = (T)MemoryCache.Default.Get(key);
 
-            GetChildren(obj);
+            //GetChildren(obj);
 
             return obj;
         }
@@ -146,35 +145,35 @@ namespace CachePOC
             return string.Format(_generateKeyStringFormat, type.FullName, entityId);
         }
 
-        private void GetChildren<T>(T obj)
-        {
-            Type type = obj.GetType();
+        //private void GetChildren<T>(T obj)
+        //{
+        //    Type type = obj.GetType();
 
-            if (type.IsClass)
-            {
-                foreach (PropertyInfo curPropInfo in type.GetProperties().Where(a => a.PropertyType.IsClass &&
-                                                                                     !a.PropertyType.IsEnum &&
-                                                                                     !a.PropertyType.IsArray &&
-                                                                                     !a.PropertyType.IsValueType &&
-                                                                                     !IsPrimitive(a.PropertyType)))
-                {
+        //    if (type.IsClass)
+        //    {
+        //        foreach (PropertyInfo curPropInfo in type.GetProperties().Where(a => a.PropertyType.IsClass &&
+        //                                                                             !a.PropertyType.IsEnum &&
+        //                                                                             !a.PropertyType.IsArray &&
+        //                                                                             !a.PropertyType.IsValueType &&
+        //                                                                             !IsPrimitive(a.PropertyType)))
+        //        {
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
-        private bool IsPrimitive(Type type)
-        {
-            return type.IsPrimitive ||
-                type.IsEnum ||
-                type == typeof(string) ||
-                type == typeof(byte) ||
-                type == typeof(int) ||
-                type == typeof(long) ||
-                type == typeof(decimal) ||
-                type == typeof(double) ||
-                type == typeof(DateTime) ||
-                type == typeof(TimeSpan);
-        }
+        //private bool IsPrimitive(Type type)
+        //{
+        //    return type.IsPrimitive ||
+        //        type.IsEnum ||
+        //        type == typeof(string) ||
+        //        type == typeof(byte) ||
+        //        type == typeof(int) ||
+        //        type == typeof(long) ||
+        //        type == typeof(decimal) ||
+        //        type == typeof(double) ||
+        //        type == typeof(DateTime) ||
+        //        type == typeof(TimeSpan);
+        //}
     }
 }

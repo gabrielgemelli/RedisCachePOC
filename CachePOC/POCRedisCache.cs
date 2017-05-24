@@ -9,8 +9,9 @@ namespace CachePOC
         private static object syncRoot = new object();
         private static volatile POCRedisCache _instance;
         private readonly TimeSpan _defaultExpirationTime;
-        private static ConnectionMultiplexer connectionMultiplexer;
-        private static IDatabase database;
+        private static IDatabase databaseMaster;
+        private static IDatabase databaseSlave;
+        private const string _generateKeyStringFormat = "{0}.Id = {1}";
 
         public static POCRedisCache Instance
         {
@@ -31,47 +32,65 @@ namespace CachePOC
 
         public POCRedisCache()
         {
-            _defaultExpirationTime = new TimeSpan(168, 0, 0);
+            _defaultExpirationTime = new TimeSpan(1, 0, 0);
 
             //use locally redis installation
-            //var connectionString = string.Format("{0}:{1}", "127.0.0.1", 6379); //localhost
-            var connectionString = string.Format("{0}:{1}", "10.51.4.94", 6379); //jamir
-            //var connectionString = string.Format("{0}:{1}", "10.51.5.23", 6379); //romulo
+            var connectionStringMaster = string.Format("{0}:{1}", "127.0.0.1", 6379); //localhost master
 
-            connectionMultiplexer = ConnectionMultiplexer.Connect(connectionString);
-            database = connectionMultiplexer.GetDatabase();
+            var connectionMultiplexerMaster = ConnectionMultiplexer.Connect(connectionStringMaster);
+            databaseMaster = connectionMultiplexerMaster.GetDatabase();
+
+            var connectionStringSlave = string.Format("{0}:{1}", "127.0.0.1", 6380); //localhost slave
+
+            var connectionMultiplexerSlave = ConnectionMultiplexer.Connect(connectionStringSlave);
+            databaseSlave = connectionMultiplexerSlave.GetDatabase();
         }
-
-        private const string _generateKeyStringFormat = "{0}.Id = {1}";
 
         public bool Exists<T>(long entityId) where T : class
         {
             var key = this.GenerateKey(typeof(T), entityId);
 
-            return database.KeyExists(key);
-        }
-
-        public T Get<T>(long entityId) where T : class
-        {
-            string key = this.GenerateKey(typeof(T), entityId);
-
-            var obj = database.StringGet(key);
-
-            return JsonConvert.DeserializeObject<T>(obj);
+            return databaseMaster.KeyExists(key);
         }
 
         public void Add<T>(T entity, long entityId, TimeSpan? expirationTime = null) where T : class
         {
             string key = this.GenerateKey(typeof(T), entityId);
 
-            if (!this.Exists<T>(entityId))
+            //if (!this.Exists<T>(entityId))
             {
                 var expiration = this.GetExpirationTime(expirationTime);
 
                 var serializedObject = JsonConvert.SerializeObject(entity);
-                database.StringSet(key, serializedObject, expiration);
+                databaseMaster.StringSet(key, serializedObject, expiration);
             }
         }
+
+        public T Get<T>(long entityId) where T : class
+        {
+            string key = this.GenerateKey(typeof(T), entityId);
+
+            var obj = databaseSlave.StringGet(key);
+
+            return JsonConvert.DeserializeObject<T>(obj);
+        }
+
+        //put
+        //public void Update<T>(long entityId, TimeSpan? expirationTime = null) where T : class
+        //{
+        //    databaseMaster.StringSet()
+        //}
+
+        public void Remove<T>(long entityId) where T : class
+        {
+            if (this.Exists<T>(entityId))
+            {
+                string key = this.GenerateKey(typeof(T), entityId);
+                databaseMaster.KeyDelete(key);
+            }
+        }
+
+        #region private methods 
 
         private string GenerateKey(Type type, long entityId)
         {
@@ -86,39 +105,6 @@ namespace CachePOC
                 return _defaultExpirationTime;
         }
 
-        public void Remove<T>(long entityId) where T : class
-        {
-            if (this.Exists<T>(entityId))
-            {
-                string key = this.GenerateKey(typeof(T), entityId);
-                database.KeyDelete(key);
-            }
-        }
-
-
-
-        //public void ReadData()
-        //{
-        //var cache = RedisConnectorHelper.Connection.GetDatabase();
-        //var devicesCount = 10000;
-        //for (int i = 0; i < devicesCount; i++)
-        //{
-        //    var value = cache.StringGet($"Device_Status:{i}");
-        //    Console.WriteLine($"Valor={value}");
-        //}
-        //}
-
-        //public void SaveBigData()
-        //{
-        //var devicesCount = 10000;
-        //var rnd = new Random();
-        //var cache = RedisConnectorHelper.Connection.GetDatabase();
-
-        //for (int i = 1; i < devicesCount; i++)
-        //{
-        //    var value = rnd.Next(0, 10000);
-        //    cache.StringSet($"Device_Status:{i}", value);
-        //}
-        //}
+        #endregion
     }
 }

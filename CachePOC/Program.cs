@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CachePOC.Controllers;
+using CachePOC.Models;
+using System;
 
 namespace CachePOC
 {
@@ -6,135 +8,121 @@ namespace CachePOC
     {
         static void Main(string[] args)
         {
-            InicializaObjetosPadrao();
+            Console.WriteLine("Criando objetos no cache");
+
+            InitializeData();
+
+            Console.WriteLine("Objetos criados no cache");
 
             long id = 1;
 
-            EscreveCategoriaDoProduto(id);
+            WriteCacheCategory(id);
 
-            EscreveFabricanteDoProduto(id);
+            WriteCacheManufacturer(id);
 
-            CriaCategoria("Nova_Categoria1");
+            WriteProductCategory(id);
 
-            CriaFabricante("Novo_Fabricante1");
+            WriteProductManufacturer(id);
 
-            EscreveCategoriaDoProduto(id);
+            Console.WriteLine("Atualizando a categoria no cache");
 
-            EscreveFabricanteDoProduto(id);
+            UpdateCategory(id, "Nova Categoria 1");
+
+            Console.WriteLine("Categoria atualizada no cache");
+
+            Console.WriteLine("Atualizando fabricante no cache");
+
+            UpdateManufacturer(id, "Novo Fabricante 1");
+
+            Console.WriteLine("Fabricante atualizado no cache");
+
+            WriteCacheCategory(id);
+
+            WriteCacheManufacturer(id);
+
+            WriteProductCategory(id);
+
+            WriteProductManufacturer(id);
 
             Console.ReadKey();
         }
 
-        private static void InicializaObjetosPadrao()
+        private static void WriteProductManufacturer(long productId)
         {
-            var categoria = CriaCategoria("Categoria1");
+            var product = new ProductController().Get(productId);
 
-            var fabricante = CriaFabricante("Fabricante1");
-
-            CriaProduto("Produto1", categoria, fabricante);
+            Console.WriteLine(string.Format("Fabricante do produto {0}: {1}", productId, product.Manufacturer.Name));
         }
 
-        private static Categoria CriaCategoria(string nome)
+        private static void WriteProductCategory(long productId)
+        {
+            var product = new ProductController().Get(productId);
+
+            Console.WriteLine(string.Format("Categoria do produto {0}: {1}", productId, product.Category.Name));
+        }
+
+        private static void WriteCacheManufacturer(long manufacturerId)
+        {
+            var manufacturer = new ManufacturerController().Get(manufacturerId);
+
+            Console.WriteLine(string.Format("Fabricante id {0} no cache: {1}", manufacturerId, manufacturer.Name));
+        }
+
+        private static void WriteCacheCategory(long categoryId)
+        {
+            var category = new CategoryController().Get(categoryId);
+
+            Console.WriteLine(string.Format("Categoria {0} no cache: {1}", categoryId, category.Name));
+        }
+
+        private static Category AddCategory(string nome)
         {
             long id = 1;
 
-            //POCMemoryCache.Instance.Remove<Categoria>(id);
-            POCRedisCache.Instance.Remove<Categoria>(id);
+            var category = new Category(id, nome);
 
-            var categoria = new Categoria() { Id = id, Nome = nome };
+            new CategoryController().Post(category);
 
-            //POCMemoryCache.Instance.Add(categoria, categoria.Id);
-            POCRedisCache.Instance.Add(categoria, categoria.Id);
-
-            return categoria;
+            return category;
         }
 
-        private static void Update()
+        private static void UpdateCategory(long id, string name)
         {
-
+            new CategoryController().Put(id, name);
         }
 
-        private static Fabricante CriaFabricante(string nome)
+        private static Manufacturer AddManufacturer(string name)
         {
             long id = 1;
 
-            //POCMemoryCache.Instance.Remove<Fabricante>(id);
-            POCRedisCache.Instance.Remove<Fabricante>(id);
+            var manufacturer = new Manufacturer(id, name);
 
-            var fabricante = new Fabricante() { Id = id, Nome = nome };
+            new ManufacturerController().Post(manufacturer);
 
-            //POCMemoryCache.Instance.Add(fabricante, fabricante.Id);
-            POCRedisCache.Instance.Add(fabricante, fabricante.Id);
-
-            return fabricante;
+            return manufacturer;
         }
 
-        private static Produto CriaProduto(string nome, Categoria categoria, Fabricante fabricante)
+        private static void UpdateManufacturer(long id, string name)
+        {
+            new ManufacturerController().Put(id, name);
+        }
+
+        private static void AddProduct(string name, Category category, Manufacturer manufacturer)
         {
             long id = 1;
 
-            //POCMemoryCache.Instance.Remove<Produto>(id);
-            POCRedisCache.Instance.Remove<Produto>(id);
+            var product = new Product(id, name, category, manufacturer);
 
-            var produto = new Produto() { Id = id, Nome = nome, Fabricante = fabricante, Categoria = categoria };
-
-            //POCMemoryCache.Instance.Add(produto, produto.Id);
-            POCRedisCache.Instance.Add(produto, produto.Id);
-
-            return produto;
+            new ProductController().Post(product);
         }
 
-        private static Categoria CarregaCategoria(long id)
+        private static void InitializeData()
         {
-            //return POCMemoryCache.Instance.Get<Categoria>(id);
-            return POCRedisCache.Instance.Get<Categoria>(id);
-        }
+            var category = AddCategory("Categoria 1");
 
-        private static Fabricante CarregaFabricante(long id)
-        {
-            //return POCMemoryCache.Instance.Get<Fabricante>(id);
-            return POCRedisCache.Instance.Get<Fabricante>(id);
-        }
+            var manufacturer = AddManufacturer("Fabricante 1");
 
-        private static Produto CarregaProduto(long id)
-        {
-            //return POCMemoryCache.Instance.Get<Produto>(id);
-            return POCRedisCache.Instance.Get<Produto>(id);
-
-            //var produto = POCMemoryCache.Instance.Get<Produto>(id);
-
-            //if (produto != null)
-            //{
-            //    var categoria = CarregaCategoria(produto.Categoria.Id);
-
-            //    if (categoria != null)
-            //    {
-            //        produto.Categoria = categoria;
-            //    }
-
-            //    var fabricante = CarregaFabricante(produto.Fabricante.Id);
-
-            //    if (fabricante != null)
-            //    {
-            //        produto.Fabricante = fabricante;
-            //    }
-            //}
-
-            //return produto;
-        }
-
-        private static void EscreveFabricanteDoProduto(long id)
-        {
-            var produto = CarregaProduto(id);
-
-            Console.WriteLine("Fabricante do produto 1: " + produto.Fabricante.Nome);
-        }
-
-        private static void EscreveCategoriaDoProduto(long id)
-        {
-            var produto = CarregaProduto(id);
-
-            Console.WriteLine("Categoria do produto 1: " + produto.Categoria.Nome);
+            AddProduct("Produto 1", category, manufacturer);
         }
     }
 }
