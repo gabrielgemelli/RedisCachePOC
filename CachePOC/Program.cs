@@ -1,128 +1,128 @@
-﻿using CachePOC.Controllers;
+﻿using System.Collections.Generic;
+using CachePOC.Controllers;
+using CachePOC.ExternalModels;
 using CachePOC.Models;
-using System;
+using CachePOC.Synchronizers;
+using static System.Console;
 
 namespace CachePOC
 {
     class Program
     {
+        static UnitController _unitControler = new UnitController();
+        static ProductSynchronizer _productSynchronizer = new ProductSynchronizer();
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Criando objetos no cache");
+            var unit = InitializeData();
 
-            InitializeData();
+            WriteLine();
+            WriteLine("Sincronizando produto");
+            WriteLine();
 
-            Console.WriteLine("Objetos criados no cache");
+            _productSynchronizer.Sync(1);
 
-            long id = 1;
+            var cachedUnit = POCCacheAdapter.Instance.Get<Unit>(unit.Id);
 
-            WriteCacheCategory(id);
+            CheckIfUnitIsAviable(cachedUnit);
 
-            WriteCacheManufacturer(id);
+            CheckIfProductIsAviable(2);
 
-            WriteProductCategory(id);
+            WriteLine();
+            WriteLine("Limpando Cache");
+            WriteLine();
 
-            WriteProductManufacturer(id);
+            ClearCache();
 
-            Console.WriteLine("Atualizando a categoria no cache");
+            WriteLine();
+            WriteLine("Cache Limpa");
+            WriteLine();
 
-            UpdateCategory(id, "Nova Categoria 1");
-
-            Console.WriteLine("Categoria atualizada no cache");
-
-            Console.WriteLine("Atualizando fabricante no cache");
-
-            UpdateManufacturer(id, "Novo Fabricante 1");
-
-            Console.WriteLine("Fabricante atualizado no cache");
-
-            WriteCacheCategory(id);
-
-            WriteCacheManufacturer(id);
-
-            WriteProductCategory(id);
-
-            WriteProductManufacturer(id);
-
-            Console.ReadKey();
+            ReadKey();
         }
 
-        private static void WriteProductManufacturer(long productId)
+        private static void CheckIfProductIsAviable(int productId)
         {
-            var product = new ProductController().Get(productId);
-
-            Console.WriteLine(string.Format("Fabricante do produto {0}: {1}", productId, product.Manufacturer.Name));
+            var product = POCCacheAdapter.Instance.Get<Product>(productId);
+            if (product == null)
+            {
+                WriteLine("Produto {0} não encontrado", productId);
+            }
+            else
+            {
+                WriteLine("Produto {0} encontrado", productId);
+            }
         }
 
-        private static void WriteProductCategory(long productId)
+        private static void CheckIfUnitIsAviable(Unit cachedUnit)
         {
-            var product = new ProductController().Get(productId);
+            WriteLine();
 
-            Console.WriteLine(string.Format("Categoria do produto {0}: {1}", productId, product.Category.Name));
+            if (cachedUnit == null)
+            {
+                WriteLine("Unidade foi removida");
+            }
+            else
+            {
+                WriteLine("Unidade ainda esta no Cache");
+            }
+
+            WriteLine();
         }
 
-        private static void WriteCacheManufacturer(long manufacturerId)
+        private static Unit InitializeData()
         {
-            var manufacturer = new ManufacturerController().Get(manufacturerId);
+            ClearCache();
 
-            Console.WriteLine(string.Format("Fabricante id {0} no cache: {1}", manufacturerId, manufacturer.Name));
+            Unit unit = GetUnit();
+
+            _unitControler.Post(unit);
+
+            WriteLine();
+            WriteLine("Unidade adicionada no cache");
+            WriteLine();
+
+            return unit;
         }
 
-        private static void WriteCacheCategory(long categoryId)
+        private static Unit GetUnit()
         {
-            var category = new CategoryController().Get(categoryId);
+            var unit = new Unit
+            {
+                Id = 1,
+                Name = "Unidade de teste"
+            };
 
-            Console.WriteLine(string.Format("Categoria {0} no cache: {1}", categoryId, category.Name));
+            unit.Products = new List<UnitProduct>();
+
+            for (int i = 1; i <= 300; i++)
+            {
+                var unitProduct = new UnitProduct();
+
+                unitProduct.UnitId = unit.Id;
+                unitProduct.Id = i;
+                unitProduct.Product = GetProduct(i);
+
+                unit.Products.Add(unitProduct);
+            }
+
+            return unit;
         }
 
-        private static Category AddCategory(string nome)
+        private static void ClearCache()
         {
-            long id = 1;
-
-            var category = new Category(id, nome);
-
-            new CategoryController().Post(category);
-
-            return category;
+            POCCacheAdapter.Instance.DisableLogging();
+            POCCacheAdapter.Instance.Clear();
+            POCCacheAdapter.Instance.EnableLogging();
         }
 
-        private static void UpdateCategory(long id, string name)
+        private static Product GetProduct(long id)
         {
-            new CategoryController().Put(id, name);
-        }
-
-        private static Manufacturer AddManufacturer(string name)
-        {
-            long id = 1;
-
-            var manufacturer = new Manufacturer(id, name);
-
-            new ManufacturerController().Post(manufacturer);
-
-            return manufacturer;
-        }
-
-        private static void UpdateManufacturer(long id, string name)
-        {
-            new ManufacturerController().Put(id, name);
-        }
-
-        private static void AddProduct(string name, Category category, Manufacturer manufacturer)
-        {
-            long id = 1;
-
-            var product = new Product(id, name, category, manufacturer);
-
-            new ProductController().Post(product);
-        }
-
-        private static void InitializeData()
-        {
-            var category = AddCategory("Categoria 1");
-
-            var manufacturer = AddManufacturer("Fabricante 1");
-
-            AddProduct("Produto 1", category, manufacturer);
+            return new Product
+            {
+                Id = id,
+                Name = string.Format("Produto de teste - {0}", id)
+            };
         }
     }
 }
