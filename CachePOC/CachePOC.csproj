@@ -32,6 +32,22 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Enyim.Caching, Version=2.11.0.0, Culture=neutral, PublicKeyToken=cec98615db04012e, processorArchitecture=MSIL">
+      <HintPath>..\packages\EnyimMemcached.2.11\lib\net35\Enyim.Caching.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Glav.CacheAdapter, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Glav.CacheAdapter.Core.4.2.0\lib\net45\Glav.CacheAdapter.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.ApplicationServer.Caching.Client, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\ServerAppFabric.Client.1.1.2106\lib\Microsoft.ApplicationServer.Caching.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.ApplicationServer.Caching.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\ServerAppFabric.Client.1.1.2106\lib\Microsoft.ApplicationServer.Caching.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -61,6 +77,8 @@
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -68,21 +86,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\CategoryController.cs" />
-    <Compile Include="Controllers\ManufacturerController.cs" />
-    <Compile Include="Models\Category.cs" />
-    <Compile Include="Models\Manufacturer.cs" />
+    <Compile Include="CacheAdapterExamples\ConsoleHelper.cs" />
+    <Compile Include="CacheAdapterExamples\Example-CacheAdapterUsage.cs" />
+    <Compile Include="CacheAdapterExamples\HammerTheCache.cs" />
+    <Compile Include="CacheAdapterExamples\InMemoryLogger.cs" />
+    <Compile Include="CacheAdapterExamples\SimpleUsageAsync.cs" />
+    <Compile Include="CacheAdapterExamples\SimpleUsageWithDependencies.cs" />
+    <Compile Include="CacheAdapterExamples\SimpleUsageWithTests.cs" />
+    <Compile Include="CacheAdapterExamples\SomeData.cs" />
+    <Compile Include="Controllers\UnitController.cs" />
+    <Compile Include="ExternalModels\Product.cs" />
+    <Compile Include="Models\Unit.cs" />
+    <Compile Include="Models\UnitProduct.cs" />
+    <Compile Include="POCCacheAdapter.cs" />
     <Compile Include="POCMemoryCache.cs" />
     <Compile Include="POCRedisCache.cs" />
-    <Compile Include="Models\Product.cs" />
-    <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RedisConnectorHelper.cs" />
+    <Compile Include="Synchronizers\ProductSynchronizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CacheAdapter-ReadMe.txt" />
+    <Content Include="Licence.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
