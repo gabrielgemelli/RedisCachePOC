@@ -12,7 +12,7 @@ namespace CachePOC
         private readonly TimeSpan _defaultExpirationTime;
         private const string _generateKeyStringFormat = "{0}.Id = {1}";
         private readonly ICacheProvider _cacheProvider;
-        private readonly Logger _logger;
+        private readonly ConsoleLogger _logger;
 
         private static volatile POCCacheAdapter _instance;
 
@@ -35,7 +35,7 @@ namespace CachePOC
 
         private POCCacheAdapter()
         {
-            _logger = new Logger();
+            _logger = new ConsoleLogger();
             _cacheProvider = CacheConfig.Create()
                 .BuildCacheProvider(_logger);
 
@@ -108,7 +108,7 @@ namespace CachePOC
                 return _defaultExpirationTime;
         }
 
-        class Logger : ILogging
+        class ConsoleLogger : ILogging
         {
             public bool Enabled { get; set; }
 

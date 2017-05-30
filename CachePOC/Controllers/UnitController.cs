@@ -1,10 +1,13 @@
 ﻿using CachePOC.ExternalModels;
 using CachePOC.Models;
+using CachePOC.Repositories;
 
 namespace CachePOC.Controllers
 {
     public class UnitController
     {
+        private readonly UnitRepository _unitRepository = new UnitRepository();
+
         public Unit Get(long id)
         {
             return POCCacheAdapter.Instance.Get<Unit>(id);
@@ -12,17 +15,7 @@ namespace CachePOC.Controllers
 
         public void Post(Unit unit)
         {
-            POCCacheAdapter.Instance.Add(unit, unit.Id);
-            unit.Products?.ForEach(unitProduct =>
-            {
-                POCCacheAdapter.Instance.Add(unitProduct, unitProduct.Id);
-                POCCacheAdapter.Instance.Add(unitProduct.Product, unitProduct.Product.Id);
-
-                POCCacheAdapter.Instance.SetDependency<Unit, UnitProduct>(unit.Id, unitProduct.Id);
-
-                POCCacheAdapter.Instance.SetDependency<UnitProduct, Unit>(unitProduct.Id, unit.Id);
-                POCCacheAdapter.Instance.SetDependency<Product, UnitProduct>(unitProduct.Product.Id, unitProduct.Id);
-            });
+            _unitRepository.Insert(unit);
         }
 
         public void Put(Unit unit)
